@@ -90,7 +90,7 @@ def target_values_with_updates(
         ):
             continue
         value = normalize_for_env(submitted)
-        if value is None or (field.nullable and not value):
+        if not value:
             values.pop(key, None)
         else:
             values[key] = value

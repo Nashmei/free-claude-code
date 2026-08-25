@@ -56,13 +56,13 @@ def load_value_state() -> ValueState:
             value = normalize_for_env(getattr(snapshot.settings, field.settings_attr))
             source = snapshot.sources[field.settings_attr].value
         elif field.key in os.environ:
-            value = os.environ[field.key].strip() or None
+            value = normalize_for_env(os.environ[field.key].strip())
             source = ConfigSource.PROCESS.value
         elif field.key in managed:
-            value = managed[field.key].strip() or None
+            value = normalize_for_env(managed[field.key].strip())
             source = ConfigSource.MANAGED.value
         else:
-            value = field.resolved_default()
+            value = normalize_for_env(field.resolved_default())
             source = ConfigSource.DEFAULT.value
         state[field.key] = ConfigValueState(value=value, source=source)
     return state

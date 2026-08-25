@@ -144,7 +144,7 @@ class ApplicationRuntime:
             self.provider_manager.start_model_list_refresh()
             await self._start_messaging_if_configured()
             logging.getLogger("uvicorn.error").info(
-                "Admin UI: %s (local-only)",
+                "Admin UI: %s",
                 local_admin_url(self.settings),
             )
             self._started = True

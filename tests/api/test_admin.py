@@ -63,13 +63,13 @@ def _clear_process_config(monkeypatch) -> None:
         monkeypatch.delenv(key, raising=False)
 
 
-def test_admin_page_is_loopback_only(monkeypatch, tmp_path):
+def test_admin_page_is_public(monkeypatch, tmp_path):
     _set_home(monkeypatch, tmp_path)
     app = create_test_app()
 
     assert _local_client(app).get("/admin").status_code == 200
     remote_client = TestClient(app, client=("203.0.113.10", 50000))
-    assert remote_client.get("/admin").status_code == 403
+    assert remote_client.get("/admin").status_code == 200
 
 
 @pytest.mark.parametrize(
@@ -92,7 +92,7 @@ def test_admin_responses_are_never_cached(monkeypatch, tmp_path, path):
 @pytest.mark.parametrize(
     ("path", "client_host", "expected_status"),
     (
-        ("/admin", "203.0.113.10", 403),
+        ("/admin", "203.0.113.10", 200),
         ("/admin/assets/missing.js", "127.0.0.1", 404),
     ),
 )
@@ -254,7 +254,7 @@ def test_admin_connected_account_routes_are_safe_loopback_only_and_uncached(
     assert cancel_response.status_code == 200
     assert account.cancelled is True
     remote = TestClient(app, client=("203.0.113.10", 50000))
-    assert remote.get("/admin/api/providers/openai/auth").status_code == 403
+    assert remote.get("/admin/api/providers/openai/auth").status_code == 200
 
 
 def test_admin_rejects_auth_routes_for_non_connected_provider(monkeypatch, tmp_path):

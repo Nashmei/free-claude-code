@@ -3,7 +3,7 @@
 <h1>
   <picture>
     <source media="(prefers-color-scheme: light)" srcset="assets/free-claude-code-wordmark-light.svg">
-    <img src="assets/free-claude-code-wordmark-dark.svg" alt="Free Claude Code" width="610">
+    <img src="assets/free-claude-code-wordmark-dark.svg" alt="Free Claude Code" width="800">
   </picture>
 </h1>
 
@@ -36,7 +36,7 @@
 Free-tier availability and limits are controlled by each provider and may change.
 
 <div align="center">
-  <img src="assets/pic.png" alt="Claude Code running with Free Claude Code" width="700">
+  <img src="assets/pic.png" alt="Claude Code running with Free Claude Code" width="900">
   <p><em>Claude Code running with FCC.</em></p>
 </div>
 
@@ -96,7 +96,7 @@ To protect the local proxy with a bearer token, enable **Proxy Authentication**
 in Admin.
 
 <div align="center">
-  <img src="assets/admin-page.png" alt="Free Claude Code Admin UI" width="700">
+  <img src="assets/admin-page.png" alt="Free Claude Code Admin UI" width="900">
 </div>
 
 ### 4. Run Your Coding Agent
@@ -158,7 +158,7 @@ fcc-muse
 <a id="model-picker"></a>
 
 <div align="center">
-  <img src="assets/cc-model-picker.png" alt="Claude Code model picker showing FCC models" width="700">
+  <img src="assets/cc-model-picker.png" alt="Claude Code model picker showing FCC models" width="900">
   <p><em>Select an FCC model from Claude Code's native <code>/model</code> picker.</em></p>
 </div>
 

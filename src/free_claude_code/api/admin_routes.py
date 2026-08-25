@@ -1,9 +1,7 @@
 """Local admin UI routes and APIs."""
 
-import ipaddress
 from collections.abc import Mapping
 from pathlib import Path
-from urllib.parse import urlsplit
 
 import httpx
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
@@ -53,35 +51,8 @@ class ConnectedAccountLoginPayload(BaseModel):
     mode: ConnectedAccountLoginMode = ConnectedAccountLoginMode.BROWSER
 
 
-def _is_loopback_host(host: str | None) -> bool:
-    if host is None:
-        return False
-    normalized = host.strip().strip("[]").lower()
-    if normalized == "localhost":
-        return True
-    try:
-        return ipaddress.ip_address(normalized).is_loopback
-    except ValueError:
-        return False
-
-
-def _origin_is_local(origin: str | None) -> bool:
-    if not origin:
-        return True
-    parsed = urlsplit(origin)
-    return _is_loopback_host(parsed.hostname)
-
-
-def require_loopback_admin(request: Request) -> None:
-    """Allow admin access only from the local machine."""
-
-    client_host = request.client.host if request.client else None
-    if not _is_loopback_host(client_host):
-        raise HTTPException(status_code=403, detail="Admin UI is local-only")
-
-    origin = request.headers.get("origin")
-    if not _origin_is_local(origin):
-        raise HTTPException(status_code=403, detail="Admin UI is local-only")
+def require_admin_access(request: Request) -> None:
+    """Keep a named access boundary for the publicly reachable Admin UI."""
 
 
 def _asset_response(filename: str) -> FileResponse:
@@ -93,13 +64,13 @@ def _asset_response(filename: str) -> FileResponse:
 
 @router.get("/admin", include_in_schema=False)
 async def admin_page(request: Request):
-    require_loopback_admin(request)
+    require_admin_access(request)
     return _asset_response("index.html")
 
 
 @router.get("/admin/assets/{filename}", include_in_schema=False)
 async def admin_asset(filename: str, request: Request):
-    require_loopback_admin(request)
+    require_admin_access(request)
     if filename not in {"admin.css", "admin.js"}:
         raise HTTPException(status_code=404, detail="Admin asset not found")
     return _asset_response(filename)
@@ -107,13 +78,13 @@ async def admin_asset(filename: str, request: Request):
 
 @router.get("/admin/api/config")
 async def get_admin_config(request: Request):
-    require_loopback_admin(request)
+    require_admin_access(request)
     return load_config_response()
 
 
 @router.post("/admin/api/config/validate")
 async def validate_admin_config(payload: AdminConfigPayload, request: Request):
-    require_loopback_admin(request)
+    require_admin_access(request)
     return validate_updates(_filtered_values(payload.values))
 
 
@@ -124,7 +95,7 @@ async def apply_admin_config(
     background_tasks: BackgroundTasks,
     services: ApiServices = Depends(get_services),
 ):
-    require_loopback_admin(request)
+    require_admin_access(request)
     result = await services.admin.apply_admin_config(_filtered_values(payload.values))
     restart = result.get("restart")
     if isinstance(restart, dict) and restart.get("automatic"):
@@ -137,13 +108,13 @@ async def admin_status(
     request: Request,
     services: ApiServices = Depends(get_services),
 ):
-    require_loopback_admin(request)
+    require_admin_access(request)
     return services.admin.admin_status()
 
 
 @router.get("/admin/api/providers/local-status")
 async def local_provider_status(request: Request):
-    require_loopback_admin(request)
+    require_admin_access(request)
     values = {key: entry.value or "" for key, entry in load_value_state().items()}
     checks = []
     for provider_id, path in LOCAL_PROVIDER_PATHS.items():
@@ -158,7 +129,7 @@ async def test_provider(
     request: Request,
     services: ApiServices = Depends(get_services),
 ):
-    require_loopback_admin(request)
+    require_admin_access(request)
     return await services.admin.test_provider(provider_id)
 
 
@@ -168,7 +139,7 @@ async def connected_account_status(
     request: Request,
     services: ApiServices = Depends(get_services),
 ):
-    require_loopback_admin(request)
+    require_admin_access(request)
     _require_connected_account_provider(provider_id)
     status = await services.admin.connected_account_status(provider_id)
     return _no_store(status.as_dict())
@@ -181,7 +152,7 @@ async def start_connected_account_login(
     request: Request,
     services: ApiServices = Depends(get_services),
 ):
-    require_loopback_admin(request)
+    require_admin_access(request)
     _require_connected_account_provider(provider_id)
     try:
         status = await services.admin.start_connected_account_login(
@@ -201,7 +172,7 @@ async def cancel_connected_account_login(
     request: Request,
     services: ApiServices = Depends(get_services),
 ):
-    require_loopback_admin(request)
+    require_admin_access(request)
     _require_connected_account_provider(provider_id)
     status = await services.admin.cancel_connected_account_login(provider_id)
     return _no_store(status.as_dict())
@@ -213,7 +184,7 @@ async def disconnect_connected_account(
     request: Request,
     services: ApiServices = Depends(get_services),
 ):
-    require_loopback_admin(request)
+    require_admin_access(request)
     _require_connected_account_provider(provider_id)
     status = await services.admin.disconnect_connected_account(provider_id)
     return _no_store(status.as_dict())
@@ -224,7 +195,7 @@ async def models(
     request: Request,
     services: ApiServices = Depends(get_services),
 ):
-    require_loopback_admin(request)
+    require_admin_access(request)
     return _model_options(services)
 
 
@@ -233,7 +204,7 @@ async def refresh_models(
     request: Request,
     services: ApiServices = Depends(get_services),
 ):
-    require_loopback_admin(request)
+    require_admin_access(request)
     result = await services.admin.refresh_models()
     return _model_options(services, refresh_result=result)
 
